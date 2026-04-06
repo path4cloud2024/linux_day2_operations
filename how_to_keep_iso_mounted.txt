@@ -1,0 +1,18 @@
+When we insert the ISO in VM to troubleshoot or to manage/configure the repo locally or to install any packages locally, it's been detected as /dev/sr0 as ROM type disk. We can simply mount it with mount command to /mnt or any other mount point but that will be available only until ISO is inserted but we can't keep ISO inserted all the time. We can simply mount it as read-only in server as follows.
+
+1) Insert the ISO or map the ISO file.
+2) It will be visible under /dev/sr0
+3) Now, using dd command we can make the local ISO file and then mount it.
+    # dd if=/dev/sr0 of=/rhel.iso bs=1M
+    (note: It depends on ISO image size, it ISO file is around 7-8 GB then you need to secure 10GB disk space before you run dd command)
+
+4) now, make the mount point where you want to mount this new rhel.iso file.
+    # mkdir /local_repo
+
+5) now, make this entry in fstab file for persistent mount.
+    # echo "/rhel.iso /local_repo iso9660 defaults 0    0" >> /etc/fstab
+    (The ISO9660 is a standard file system format for optical media storage, and it’s written for different operating systems, ensuring cross-platform compatibility.)
+    https://www.diskinternals.com/glossary/iso9660/
+    
+    # mount -a
+    (it will give warning as "write protected, mounted read-only", thats ok since ISO file can't be mounted as read-write so being a optical device, it will be mounted as read only)

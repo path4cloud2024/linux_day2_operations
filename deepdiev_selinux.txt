@@ -1,0 +1,101 @@
+*** SELinux (Security-Enhanced Linux) is a kernel-level security mechanism used in Red Hat–based Linux distributions (RHEL, CentOS, Rocky Linux, AlmaLinux, Fedora).
+It provides Mandatory Access Control (MAC) to protect the system even if a process or user is compromised.
+
+🧠 Why SELinux Exists (Simple Idea)
+    Traditional Linux security uses DAC (Discretionary Access Control):
+        - If a user owns a file → they can access it
+        - If a service is hacked → attacker gets same permissions
+    SELinux adds an extra security layer:
+        - Even if a process can access a file, SELinux decides whether it is allowed.
+
+*******************************************************************************************************
+
+🛡️ How SELinux Works
+    SELinux enforces rules using policies based on:
+        - Who (process)
+        - What (file, port, socket)
+        - How (read, write, execute)
+        - Every object gets a security context:
+            user:role:type:level
+        - Example:
+            system_u:system_r:httpd_t:s0
+
+👉 This means:
+    httpd can only access files labeled for web services
+    It cannot touch database files, user home directories, etc.
+
+*******************************************************************************************************
+
+⚙️ SELinux Modes
+    | Mode                 | Description                                   |
+    | ---------------------| --------------------------------------------- |
+    | **Enforcing** ✅    | Policies are enforced (default & recommended) |
+    | **Permissive** ⚠️   | Violations are logged, but not blocked        |
+    | **Disabled** ❌     | SELinux is completely turned off              |
+
+Check current mode:
+    # getenforce
+
+Change mode temporarily:
+    # setenforce 0   # Permissive
+    # setenforce 1   # Enforcing
+
+*******************************************************************************************************
+
+📦 SELinux Policies
+    | Policy         | Use Case                                        |
+    | -------------- | ----------------------------------------------- |
+    | **Targeted** ⭐ | Protects only network-facing services (default) |
+    | **MLS**        | Military-grade multi-level security             |
+    | **Strict**     | Every process is confined (rarely used)         |
+
+** Most systems use Targeted policy.
+
+*******************************************************************************************************
+
+🧪 Common SELinux Commands
+    Check SELinux status:
+        # sestatus
+    View file context:
+        # ls -Z
+    View process context:
+        # ps -Z
+    Check SELinux denials:
+        # ausearch -m AVC
+
+*******************************************************************************************************
+
+🚨 Why People Think SELinux Is “Bad”
+
+    ❌ Applications fail
+    ❌ Permission denied errors
+    ❌ Hard to debug (at first)
+
+But in reality:
+    ✔️ SELinux is doing its job
+    ✔️ Prevents privilege escalation
+    ✔️ Stops attackers even after a breach
+
+👉 Correct fix: adjust SELinux policy, not disable it
+
+*******************************************************************************************************
+
+🧩 Real-World Example
+    Apache hacked scenario
+        Without SELinux:
+            - Hacker can read /etc/shadow
+            - Access database files
+            - Move laterally
+        With SELinux:
+            - Apache can ONLY access /var/www/html
+            - Attack is contained
+            - System stays secure
+
+*******************************************************************************************************
+
+✅ Best Practices (Red Hat Recommendation)
+
+✔️ Keep SELinux Enforcing
+✔️ Use audit2allow carefully
+✔️ Fix file contexts using restorecon
+✔️ Never disable SELinux in production

@@ -1,0 +1,160 @@
+While changing the password, if we get below error:
+
+[root@osboxes ~]# passwd path4cloud Changing password for user path4cloud. New password: Retype new password: passwd: Authentication token manipulation error 
+
+Then check one by step, that would fix your issue:
+
+1) reboot your system
+(if fixed, then enjoy else go to step 2)
+
+2) Another possible cause of the “passwd: Authentication token manipulation error” is wrong PAM (Pluggable Authentication Module) settings. This makes the module unable to obtain the new authentication token entered. Check the permission, if should be like below:
+[ansibleuser@rhel-9 ~]$ ll /etc/pam.d/
+total 96
+-rw-r--r--. 1 root root 232 Aug  6  2025 config-util
+-rw-r--r--. 1 root root 322 Feb 15  2019 crond
+-rw-r--r--. 1 root root 701 Aug  6  2025 fingerprint-auth
+-rw-r--r--. 1 root root 676 Jan 16  2025 login
+-rw-r--r--. 1 root root 154 Aug  6  2025 other
+-rw-r--r--. 1 root root 168 Aug 10  2021 passwd
+-rw-r--r--. 1 root root 760 Aug  6  2025 password-auth
+-rw-r--r--. 1 root root 155 Aug  7  2025 polkit-1
+-rw-r--r--. 1 root root 398 Aug  6  2025 postlogin
+-rw-r--r--. 1 root root 640 Jan 16  2025 remote
+-rw-r--r--. 1 root root 143 Jan 16  2025 runuser
+-rw-r--r--. 1 root root 138 Jan 16  2025 runuser-l
+-rw-r--r--. 1 root root 743 Aug  6  2025 smartcard-auth
+-rw-r--r--. 1 root root 727 Dec 10 14:06 sshd
+-rw-r--r--. 1 root root 214 May 20  2025 sssd-shadowutils
+-rw-r--r--. 1 root root 566 Jan 16  2025 su
+-rw-r--r--. 1 root root  97 Oct  1  2025 subscription-manager
+-rw-r--r--. 1 root root 154 Jun 30  2025 sudo
+-rw-r--r--. 1 root root 178 Jun 30  2025 sudo-i
+-rw-r--r--. 1 root root 137 Jan 16  2025 su-l
+-rw-r--r--. 1 root root 760 Aug  6  2025 system-auth
+-rw-r--r--. 1 root root 414 Dec  1 19:35 systemd-user
+-rw-r--r--. 1 root root  84 Jan  9  2025 vlock
+-rw-r--r--. 1 root root 159 Oct  3  2025 vmtoolsd
+
+
+If not then run # sudo pam-auth-update
+
+(if fixed, then enjoy else go to step 3)
+
+3) You might also see this error if the / partition is mounted as read only, which means no file can be modified thus a user’s password can’t be set or changed. To fix this error, you need to mount the root partition as as read/write as shown.
+sudo mount -o remount,rw /
+if fixed, then enjoy else go to step 4)
+
+4) Set Correct Permissions on Shadow File
+Wrong permissions on the /etc/shadow file, which stores actual passwords for user accounts in encrypted format can also cause this error. To check the permissions on this file, use the following command.
+
+[ansibleuser@rhel-9 ~]$ ls -l  /etc/shadow
+----------. 1 root root 791 Apr  6 15:56 /etc/shadow
+
+[ansibleuser@rhel-9 ~]$ ls -la /etc/passwd
+-rw-r--r--. 1 root root 1047 Apr  6 15:56 /etc/passwd
+
+Check file attributes
+# lsattr /etc/*shadow /etc/passwd /etc/group
+
+correct:
+--------------e------ /etc/gshadow
+--------------e------ /etc/shadow
+--------------e------ /etc/passwd
+--------------e------ /etc/group
+Wrong:
+----i---------e------ /etc/shadow
+If the immutable attribute (-i) is present on any file, remove it:
+# chattr -i /etc/*shadow /etc/passwd /etc/group
+
+
+Recreate the shadow password file
+ 
+ Back up the existing shadow file:
+	# mv /etc/shadow /etc/shadow.bak
+ Recreate the shadow password file from /etc/passwd:
+	# pwconv
+
+5) Repair and Fix Filesystem Errors
+Minor storage drive or filesystem errors can also cause the error in question. You can use Linux disk scanning tools such as fsck to fix such errors.
+(https://www.tecmint.com/linux-disk-scanning-tools/)
+
+6) Free Up Disk Space
+Furthermore, if your disk is full, then you can not modify any file on the disk especially when file’s size is meant to increase. This can also cause the above error. In this case, read our following articles to clean up disk space can help solve this error. If the disk is full, free up space
+# sudo dnf clean all
+# sudo journalctl --vacuum-time=3d
+
+If Corrupted /etc/shadow
+# Verify the integrity of password files
+sudo pwck
+sudo grpck
+
+# If shadow is corrupted, fix the entry
+# Use vipw -s for safe editing of shadow
+sudo vipw -s
+
+7) Password Complexity Policy
+# Check PAM password quality settings
+cat /etc/security/pwquality.conf
+
+# The new password might not meet complexity requirements
+# Check the minimum length, character classes, etc.
+# minlen = 8
+# dcredit = -1
+# ucredit = -1
+# lcredit = -1
+# ocredit = -1
+
+# Temporarily relax the policy if needed for testing
+sudo vi /etc/security/pwquality.conf
+
+8) Account Is Locked or Expired
+# Check the account status
+sudo chage -l username
+
+# If the account is expired, reset expiration
+sudo chage -E -1 username
+
+# If the account is locked, unlock it
+sudo passwd -u username
+
+9) SELinux Denying Password Changes
+
+# Check for SELinux denials
+[root@centos9 ~]# ausearch -m avc -c passwd --start recent
+----
+time->Mon Apr  6 07:50:30 2026
+type=PROCTITLE msg=audit(1775476230.439:101): proctitle=706173737764007061746834636C6F7564
+type=SYSCALL msg=audit(1775476230.439:101): arch=c000003e syscall=257 success=no exit=-13 a0=ffffff9c a1=7f1dd059138e a2=241 a3=1b6 items=0 ppid=1292 pid=1306 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="passwd" exe="/usr/bin/passwd" subj=unconfined_u:unconfined_r:passwd_t:s0-s0:c0.c1023 key=(null)
+type=AVC msg=audit(1775476230.439:101): avc:  denied  { write } for  pid=1306 comm="passwd" name="nshadow" dev="sda2" ino=403028412 scontext=unconfined_u:unconfined_r:passwd_t:s0-s0:c0.c1023 tcontext=system_u:object_r:unlabeled_t:s0 tclass=file permissive=0
+----
+time->Mon Apr  6 07:50:30 2026
+type=PROCTITLE msg=audit(1775476230.445:102): proctitle=706173737764007061746834636C6F7564
+type=SYSCALL msg=audit(1775476230.445:102): arch=c000003e syscall=87 success=no exit=-13 a0=7f1dd059138e a1=562960dbb010 a2=0 a3=0 items=0 ppid=1292 pid=1306 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="passwd" exe="/usr/bin/passwd" subj=unconfined_u:unconfined_r:passwd_t:s0-s0:c0.c1023 key=(null)
+type=AVC msg=audit(1775476230.445:102): avc:  denied  { unlink } for  pid=1306 comm="passwd" name="nshadow" dev="sda2" ino=403028412 scontext=unconfined_u:unconfined_r:passwd_t:s0-s0:c0.c1023 tcontext=system_u:object_r:unlabeled_t:s0 tclass=file permissive=0
+----
+time->Mon Apr  6 07:54:12 2026
+type=PROCTITLE msg=audit(1775476452.270:113): proctitle=706173737764007061746834636C6F7564
+type=SYSCALL msg=audit(1775476452.270:113): arch=c000003e syscall=257 success=no exit=-13 a0=ffffff9c a1=7fc5fee4f38e a2=241 a3=1b6 items=0 ppid=1292 pid=1363 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="passwd" exe="/usr/bin/passwd" subj=unconfined_u:unconfined_r:passwd_t:s0-s0:c0.c1023 key=(null)
+type=AVC msg=audit(1775476452.270:113): avc:  denied  { write } for  pid=1363 comm="passwd" name="nshadow" dev="sda2" ino=403028412 scontext=unconfined_u:unconfined_r:passwd_t:s0-s0:c0.c1023 tcontext=system_u:object_r:unlabeled_t:s0 tclass=file permissive=0
+----
+time->Mon Apr  6 07:54:12 2026
+type=PROCTITLE msg=audit(1775476452.275:114): proctitle=706173737764007061746834636C6F7564
+type=SYSCALL msg=audit(1775476452.275:114): arch=c000003e syscall=87 success=no exit=-13 a0=7fc5fee4f38e a1=555df3cb4010 a2=0 a3=0 items=0 ppid=1292 pid=1363 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="passwd" exe="/usr/bin/passwd" subj=unconfined_u:unconfined_r:passwd_t:s0-s0:c0.c1023 key=(null)
+type=AVC msg=audit(1775476452.275:114): avc:  denied  { unlink } for  pid=1363 comm="passwd" name="nshadow" dev="sda2" ino=403028412 scontext=unconfined_u:unconfined_r:passwd_t:s0-s0:c0.c1023 tcontext=system_u:object_r:unlabeled_t:s0 tclass=file permissive=0
+
+Test with SELinux in Permissive Mode
+To confirm 100% if SELinux is still the culprit, temporarily set it to Permissive mode and try the password change:
+
+ # setenforce 0
+ # passwd path4cloud
+ # setenforce 1
+ 
+Remove Temporary Password Files
+ # rm -f /etc/nshadow /etc/npasswd /etc/ngshadow /etc/ngroup
+ 
+If worked then try to restore contexts for all password files
+ # sudo restorecon -v /etc/shadow /etc/passwd /etc/gshadow /etc/group
+ 
+Alternative: Full System Relabel
+ # touch /.autorelabel
+ # reboot

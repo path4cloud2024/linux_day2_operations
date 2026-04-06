@@ -1,0 +1,24 @@
+If we want to clone the VM in oracle virtual box then make sure while cloning, select the option to generate a new MAC for netwokr interface.
+
+After clone the VM, it will be up with same name and most probably with same IP.
+
+How to fix that???
+
+- login to VM with same credentials
+- remove the existing ID and regenerate new one.
+    # rm -f /etc/machine-id /var/lib/dbus/machine-id
+    # systemd-machine-id-setup
+
+- clease old DHCP lease
+    # rm -f /var/lib/systemd/netif*/*
+    # rm -f /var/lib/dhcp/*
+
+- restar the netwokr
+    # systemctl restart systemd-networkd
+    # netplan apply
+
+- reboot (optional)
+
+Change the hostname
+    # hostnamectl set-hostname <new_name>
+    # reboot
