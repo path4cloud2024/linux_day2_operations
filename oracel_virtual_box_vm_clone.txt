@@ -22,3 +22,9 @@ How to fix that???
 Change the hostname
     # hostnamectl set-hostname <new_name>
     # reboot
+
+--> Alternatively, we can clone the disk directly and attach the disk to new VM:
+- Open CMD as administrator
+# VBoxManage clonemedium disk <path_to_current_disk>> <path_to_disk_with_naew_name> --format VDI (can be set as VMDK)
+
+# VBoxManage clonemedium disk "F:\Redhat_developer\rhel9-vmdk.vmdk" "F:\Redhat_developer\rhel9-fixed.vdi" --format VDI
