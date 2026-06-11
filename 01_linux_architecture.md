@@ -139,9 +139,11 @@ Understanding some of the most commonly encountered system calls in strace outpu
 - We can calculate the cummulative time took by a process for each call but it differs for a shell built-in function and binary (actual command) from system. Let's find out ls, or pwd.
 
 **pwd is a shell builtin**
+
 ![alt text](./images/pwd.png)
 
 **/bin/pwd is /bin/pwd**
+
 ![alt text](./images/bin-pwd.png)
 
 - For pwd (Builtin):strace is an external command. To run it, Bash has to create a new process. Inside that new process, strace tries to execute pwd. Since strace is not a shell, it can't run "builtins"—so it looks in your $PATH, finds /usr/bin/pwd, and runs that instead.
