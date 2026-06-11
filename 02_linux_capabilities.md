@@ -191,16 +191,7 @@ Step 3: Enable the PAM Module
     IF ABOVE STEPS DOESN'T WORK THEN WE CAN TRY THE `keepcaps` OPTION, WHICH ALLOWS A PROCESS TO RETAIN ITS PERMITTED CAPABILITIES. 
     IT SUPPORTS THE `defer` OPTION, WHICH CAUSES `pam_cap.so` TO REAPPLY AMBIENT CAPABILITIES WITHIN A CALLBACK TO `pam_end()`.
     ```
-
-
-Step 4: Verify the Configuration
-- To test that it works, open a completely new terminal session and log in as the user you modified (e.g., ansibleuser).
-    ```
-    Run the following command to check if the capability is inherited in the Inheritable set: 
-    # capsh --print
-
-    Look at the "Inheritable/Current/Ambient set/Current IAB" line in the output. It should now list cap_chown (or whichever capability you specified).
-    ```
+    **IF ABOVE STPES DOESN'T WORK, THEN FOLLOW BELOW**
     ```
     Remove the line you added earlier in custom PAM configuration file.
     Locate the auth section (near the top of the file) and place the module immediately after your main authentication module line (pam_sss.so or pam_unix.so):
@@ -222,6 +213,14 @@ Step 4: Verify the Configuration
     - none * acts as a required catch-all security boundary to keep other system accounts clean.
     ```
 
+Step 4: Verify the Configuration
+- To test that it works, open a completely new terminal session and log in as the user you modified (e.g., ansibleuser).
+    ```
+    Run the following command to check if the capability is inherited in the Inheritable set: 
+    # capsh --print
+
+    Look at the "Inheritable/Current/Ambient set/Current IAB" line in the output. It should now list cap_chown (or whichever capability you specified).
+    ```
 
 
 ### Let see this in action with System Administrator Approach (File Capabilities) for all LINUX versions
