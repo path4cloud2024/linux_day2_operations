@@ -188,7 +188,8 @@ Step 3: Enable the PAM Module
     **_It might not work with modern or latet linux (RHEL9+). In RHEL 9, the Linux kernel explicitly prevents standard user logins from receiving ambient capabilities directly into an interactive shell process tree if that shell was started by a non-root process. The kernel treats this as an unprivileged UID transition and forcefully zeroes out the Ambient set for security. Because of this kernel-level design, it is impossible to get a raw, unmodified interactive shell (/bin/bash) to inherit ambient capabilities organically on RHEL 9 without either a file capability helper or a profile wrapper._**  
 
     ```
-    IF ABOVE STEPS DOESN'T WORK THEN WE CAN TRY THE `keepcaps` OPTION, WHICH ALLOWS A PROCESS TO RETAIN ITS PERMITTED CAPABILITIES. IT SUPPORTS THE `defer` OPTION, WHICH CAUSES `pam_cap.so` TO REAPPLY AMBIENT CAPABILITIES WITHIN A CALLBACK TO `pam_end()`.
+    IF ABOVE STEPS DOESN'T WORK THEN WE CAN TRY THE `keepcaps` OPTION, WHICH ALLOWS A PROCESS TO RETAIN ITS PERMITTED CAPABILITIES. 
+    IT SUPPORTS THE `defer` OPTION, WHICH CAUSES `pam_cap.so` TO REAPPLY AMBIENT CAPABILITIES WITHIN A CALLBACK TO `pam_end()`.
     ```
 
 
@@ -255,4 +256,3 @@ Step 4: Verify the Configuration
     `# testuser-chown testuser /opt/root_file/`
     ![alt text](./images/testuser-chown-test.png)
 
-    
