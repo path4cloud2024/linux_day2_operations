@@ -26,6 +26,7 @@ The Linux operating system is divided into two primary "spaces" to provide stabi
 
     When an application needs to do something "privileged"—like reading a file from the disk or sending data over the network—it cannot do it directly. Instead, it makes a System Call (syscall). This triggers a controlled "context switch," where the CPU switches from user mode to kernel mode to perform the task safely on behalf of the application, then returns the result.
 
+---
 
 ```mermaid
 flowchart TD
