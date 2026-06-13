@@ -3,6 +3,7 @@
 
 ## How Linux Communicates with Hardware (Overview)
 When you power on a Linux machine, there is a chain of communication:
+```mermaid
 flowchart TD
     A["Hardware (CPU, RAM, GPU, Disk, NIC)"]
     B["Firmware (BIOS / UEFI)"]
