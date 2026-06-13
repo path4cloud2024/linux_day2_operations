@@ -3,6 +3,8 @@
 
 ## How Linux Communicates with Hardware (Overview)
 When you power on a Linux machine, there is a chain of communication:
+---
+
 ```mermaid
 flowchart TD
     A["Hardware (CPU, RAM, GPU, Disk, NIC)"]
@@ -17,7 +19,7 @@ flowchart TD
     C --> D
     D --> E
     E --> F
-
+```
 ---
 
 Linux uses drivers (kernel modules) to talk to hardware via PCIe/USB buses
